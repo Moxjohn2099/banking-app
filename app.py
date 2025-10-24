@@ -1,3 +1,6 @@
+import logging
+logging.basicConfig(level=logging.INFO)
+
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import json
@@ -211,11 +214,29 @@ class Bank:
 
 # ===== FLASK APP =====
 app = Flask(__name__)
-# FIXED CORS CONFIGURATION FOR MOBILE
-CORS(app, resources={r"/*": {"origins": "*"}})
+
+# SUPER CORS FIX FOR MOBILE & COMPUTER
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["*"]
+    }
+})
 
 # Initialize bank
 bank = Bank("Digital Bank", "123456789")
+
+# ADD MOBILE TEST ROUTE
+@app.route('/api/mobile-test')
+def mobile_test():
+    return jsonify({
+        "status": "SUCCESS",
+        "message": "✅ Backend is working on MOBILE!",
+        "server": "Render",
+        "timestamp": datetime.datetime.now().isoformat(),
+        "url": "https://banking-app-6dfe.onrender.com"
+    })
 
 # SERVE FRONTEND
 @app.route('/')
@@ -230,7 +251,6 @@ def serve_frontend():
 def create_account():
     try:
         data = request.json
-        print("Received data:", data)
         
         address = Address(
             street=data['address']['street'],
@@ -258,7 +278,6 @@ def create_account():
         })
     
     except Exception as e:
-        print("Error:", str(e))
         return jsonify({"success": False, "error": str(e)}), 400
 
 @app.route('/api/accounts/<account_number>', methods=['GET'])
@@ -365,18 +384,24 @@ def health_check():
         "status": "healthy",
         "bank_name": bank.name,
         "total_accounts": len(bank.accounts),
-        "total_customers": len(bank.customers)
+        "total_customers": len(bank.customers),
+        "mobile_support": "enabled"
     })
 
-# ADD CORS HEADERS FOR MOBILE ACCESS
+# ENHANCED CORS HEADERS FOR MOBILE
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Headers', '*')
+    response.headers.add('Access-Control-Allow-Methods', '*')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
     return response
 
-# UPDATE THE PORT CONFIGURATION AT THE BOTTOM
+# SERVER STARTUP
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+    print(f"🚀 Banking App Server Started!")
+    print(f"📍 URL: https://banking-app-6dfe.onrender.com")
+    print(f"📱 Mobile Test: /api/mobile-test")
+    print(f"❤️ Health Check: /api/health")
+    app.run(host='0.0.0.0', port=port, debug=False)
