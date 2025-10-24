@@ -1,10 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file  # ADD send_file here
 from flask_cors import CORS
 import json
 import datetime
 import random
 from enum import Enum
 from dataclasses import dataclass
+import os  # ADD this import
 
 # ===== BANKING SYSTEM CLASSES =====
 class AccountType(Enum):
@@ -215,10 +216,15 @@ CORS(app)
 # Initialize bank
 bank = Bank("Digital Bank", "123456789")
 
+# ADD THIS ROUTE - SERVE FRONTEND
 @app.route('/')
-def home():
-    return jsonify({"message": "Banking API is running!", "status": "active"})
+def serve_frontend():
+    try:
+        return send_file('simple_frontend.html')
+    except Exception as e:
+        return jsonify({"error": f"Frontend file not found: {str(e)}"}), 404
 
+# KEEP ALL YOUR EXISTING ROUTES AS THEY ARE
 @app.route('/api/accounts', methods=['POST'])
 def create_account():
     try:
@@ -361,5 +367,7 @@ def health_check():
         "total_customers": len(bank.customers)
     })
 
+# UPDATE THE PORT CONFIGURATION AT THE BOTTOM
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 10000))  # CHANGE 5000 to 10000
+    app.run(host='0.0.0.0', port=port)
