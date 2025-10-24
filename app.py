@@ -9,6 +9,9 @@ import random
 from enum import Enum
 from dataclasses import dataclass
 import os
+import threading
+import requests
+import time
 
 # ===== BANKING SYSTEM CLASSES =====
 class AccountType(Enum):
@@ -212,6 +215,19 @@ class Bank:
             if account_number not in self.accounts:
                 return account_number
 
+# ===== AUTO KEEP-ALIVE SYSTEM =====
+def keep_alive_ping():
+    """Auto ping the server every 10 minutes to keep it awake"""
+    try:
+        # Ping our own server
+        requests.get("https://banking-app-6dfe.onrender.com/api/keep-alive", timeout=10)
+        print(f"✅ Keep-alive ping sent at {datetime.datetime.now()}")
+    except Exception as e:
+        print(f"❌ Keep-alive failed: {e}")
+    
+    # Schedule next ping in 10 minutes (600 seconds)
+    threading.Timer(600.0, keep_alive_ping).start()
+
 # ===== FLASK APP =====
 app = Flask(__name__)
 
@@ -227,6 +243,16 @@ CORS(app, resources={
 # Initialize bank
 bank = Bank("Digital Bank", "123456789")
 
+# KEEP-ALIVE ROUTE
+@app.route('/api/keep-alive')
+def keep_alive():
+    return jsonify({
+        "status": "awake",
+        "message": "Server is being kept alive!",
+        "timestamp": datetime.datetime.now().isoformat(),
+        "next_ping": "10 minutes"
+    })
+
 # ADD MOBILE TEST ROUTE
 @app.route('/api/mobile-test')
 def mobile_test():
@@ -235,7 +261,8 @@ def mobile_test():
         "message": "✅ Backend is working on MOBILE!",
         "server": "Render",
         "timestamp": datetime.datetime.now().isoformat(),
-        "url": "https://banking-app-6dfe.onrender.com"
+        "url": "https://banking-app-6dfe.onrender.com",
+        "keep_alive": "active"
     })
 
 # SERVE FRONTEND
@@ -385,7 +412,9 @@ def health_check():
         "bank_name": bank.name,
         "total_accounts": len(bank.accounts),
         "total_customers": len(bank.customers),
-        "mobile_support": "enabled"
+        "mobile_support": "enabled",
+        "keep_alive": "active",
+        "server_uptime": "24/7"
     })
 
 # ENHANCED CORS HEADERS FOR MOBILE
@@ -400,8 +429,15 @@ def after_request(response):
 # SERVER STARTUP
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
+    
+    # START AUTO KEEP-ALIVE SYSTEM
+    print(f"🚀 Starting Auto Keep-Alive System...")
+    keep_alive_ping()  # Start the first ping
+    
     print(f"🚀 Banking App Server Started!")
     print(f"📍 URL: https://banking-app-6dfe.onrender.com")
     print(f"📱 Mobile Test: /api/mobile-test")
     print(f"❤️ Health Check: /api/health")
+    print(f"⏰ Keep-Alive: /api/keep-alive (every 10 minutes)")
+    
     app.run(host='0.0.0.0', port=port, debug=False)
