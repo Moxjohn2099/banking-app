@@ -1,11 +1,11 @@
-from flask import Flask, request, jsonify, send_file  # ADD send_file here
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import json
 import datetime
 import random
 from enum import Enum
 from dataclasses import dataclass
-import os  # ADD this import
+import os
 
 # ===== BANKING SYSTEM CLASSES =====
 class AccountType(Enum):
@@ -211,12 +211,13 @@ class Bank:
 
 # ===== FLASK APP =====
 app = Flask(__name__)
-CORS(app)
+# FIXED CORS CONFIGURATION FOR MOBILE
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Initialize bank
 bank = Bank("Digital Bank", "123456789")
 
-# ADD THIS ROUTE - SERVE FRONTEND
+# SERVE FRONTEND
 @app.route('/')
 def serve_frontend():
     try:
@@ -367,7 +368,15 @@ def health_check():
         "total_customers": len(bank.customers)
     })
 
+# ADD CORS HEADERS FOR MOBILE ACCESS
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
+
 # UPDATE THE PORT CONFIGURATION AT THE BOTTOM
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))  # CHANGE 5000 to 10000
+    port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
