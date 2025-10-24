@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking App - Simple Frontend</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #34495e;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+        }
+        
+        .tab.active {
+            background: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #c0392b;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #ecf0f1;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .account-info {
+            background: #2ecc71;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .transaction {
+            border-bottom: 1px solid #bdc3c7;
+            padding: 10px 0;
+        }
+        
+        .transaction:last-child {
+            border-bottom: none;
+        }
+        
+        .deposit {
+            color: #27ae60;
+        }
+        
+        .withdrawal {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏦 Digital Banking</h1>
+            <p>Manage your accounts easily</p>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('create')">Create Account</button>
+            <button class="tab" onclick="showTab('access')">Access Account</button>
+            <button class="tab" onclick="showTab('transactions')">Transactions</button>
+        </div>
+        
+        <div class="content">
+            <!-- CREATE ACCOUNT TAB -->
+            <div id="create-tab">
+                <h2>Create New Account</h2>
+                <form id="create-form">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="first_name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="last_name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" id="phone" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="date" id="dob" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Account Type</label>
+                        <select id="account_type" required>
+                            <option value="savings">Savings Account</option>
+                            <option value="checking">Checking Account</option>
+                            <option value="student">Student Account</option>
+                            <option value="business">Business Account</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Initial Deposit (₱)</label>
+                        <input type="number" id="initial_deposit" min="0" required>
+                    </div>
+                    
+                    <h3>Address</h3>
+                    <div class="form-group">
+                        <label>Street</label>
+                        <input type="text" id="street" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="city" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>State/Province</label>
+                        <input type="text" id="state" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>ZIP Code</label>
+                        <input type="text" id="zip_code" required>
+                    </div>
+                    
+                    <button type="submit">Create Account</button>
+                </form>
+                
+                <div id="create-result" class="result hidden"></div>
+            </div>
+            
+            <!-- ACCESS ACCOUNT TAB -->
+            <div id="access-tab" class="hidden">
+                <h2>Access Your Account</h2>
+                <div class="form-group">
+                    <label>Account Number</label>
+                    <input type="text" id="access_account" placeholder="Enter your account number">
+                </div>
+                <button onclick="getAccountInfo()">Get Account Info</button>
+                
+                <div id="account-info" class="hidden">
+                    <div class="account-info">
+                        <h3>Account Information</h3>
+                        <p><strong>Account Number:</strong> <span id="info-number"></span></p>
+                        <p><strong>Name:</strong> <span id="info-name"></span></p>
+                        <p><strong>Balance:</strong> ₱<span id="info-balance"></span></p>
+                        <p><strong>Account Type:</strong> <span id="info-type"></span></p>
+                    </div>
+                    
+                    <h3>Quick Actions</h3>
+                    <div class="form-group">
+                        <label>Amount (₱)</label>
+                        <input type="number" id="transaction-amount" min="0">
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button style="background: #27ae60;" onclick="deposit()">Deposit</button>
+                        <button style="background: #e74c3c;" onclick="withdraw()">Withdraw</button>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label>Transfer to Account</label>
+                        <input type="text" id="transfer-to" placeholder="Destination account number">
+                    </div>
+                    <button style="background: #3498db;" onclick="transfer()">Transfer</button>
+                </div>
+                
+                <div id="access-result" class="result hidden"></div>
+            </div>
+            
+            <!-- TRANSACTIONS TAB -->
+            <div id="transactions-tab" class="hidden">
+                <h2>Transaction History</h2>
+                <div class="form-group">
+                    <label>Account Number</label>
+                    <input type="text" id="history-account" placeholder="Enter your account number">
+                </div>
+                <button onclick="getTransactionHistory()">View History</button>
+                
+                <div id="transaction-history" class="result hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        
+        // Tab management
+        function showTab(tabName) {
+            // Hide all tabs
+            document.getElementById('create-tab').classList.add('hidden');
+            document.getElementById('access-tab').classList.add('hidden');
+            document.getElementById('transactions-tab').classList.add('hidden');
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab and set active
+            document.getElementById(tabName + '-tab').classList.remove('hidden');
+            event.target.classList.add('active');
+        }
+        
+        // Create account form
+        document.getElementById('create-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                first_name: document.getElementById('first_name').value,
+                last_name: document.getElementById('last_name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                date_of_birth: document.getElementById('dob').value,
+                account_type: document.getElementById('account_type').value,
+                initial_deposit: document.getElementById('initial_deposit').value,
+                address: {
+                    street: document.getElementById('street').value,
+                    city: document.getElementById('city').value,
+                    state: document.getElementById('state').value,
+                    zip_code: document.getElementById('zip_code').value
+                }
+            };
+            
+            try {
+                const response = await fetch(API_BASE + '/accounts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                const resultDiv = document.getElementById('create-result');
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <h3 style="color: #27ae60;">✅ Account Created Successfully!</h3>
+                        <p><strong>Account Number:</strong> ${result.account_number}</p>
+                        <p><strong>Message:</strong> ${result.message}</p>
+                        <p>Please save your account number for future access.</p>
+                    `;
+                    // Clear form
+                    document.getElementById('create-form').reset();
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3 style="color: #e74c3c;">❌ Error</h3>
+                        <p>${result.error}</p>
+                    `;
+                }
+                resultDiv.classList.remove('hidden');
+                
+            } catch (error) {
+                document.getElementById('create-result').innerHTML = `
+                    <h3 style="color: #e74c3c;">❌ Connection Error</h3>
+                    <p>Unable to connect to the server. Make sure the backend is running.</p>
+                `;
+                document.getElementById('create-result').classList.remove('hidden');
+            }
+        });
+        
+        // Get account information
+        async function getAccountInfo() {
+            const accountNumber = document.getElementById('access_account').value;
+            
+            if (!accountNumber) {
+                alert('Please enter an account number');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_BASE + '/accounts/' + accountNumber);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const account = result.account;
+                    document.getElementById('info-number').textContent = account.account_number;
+                    document.getElementById('info-name').textContent = 
+                        account.account_holder.first_name + ' ' + account.account_holder.last_name;
+                    document.getElementById('info-balance').textContent = account.balance.toFixed(2);
+                    document.getElementById('info-type').textContent = account.account_type;
+                    
+                    document.getElementById('account-info').classList.remove('hidden');
+                    document.getElementById('access-result').classList.add('hidden');
+                } else {
+                    document.getElementById('access-result').innerHTML = `
+                        <h3 style="color: #e74c3c;">❌ Error</h3>
+                        <p>${result.error}</p>
+                    `;
+                    document.getElementById('access-result').classList.remove('hidden');
+                    document.getElementById('account-info').classList.add('hidden');
+                }
+            } catch (error) {
+                document.getElementById('access-result').innerHTML = `
+                    <h3 style="color: #e74c3c;">❌ Connection Error</h3>
+                    <p>Unable to connect to the server.</p>
+                `;
+                document.getElementById('access-result').classList.remove('hidden');
+            }
+        }
+        
+        // Deposit money
+        async function deposit() {
+            const accountNumber = document.getElementById('access_account').value;
+            const amount = document.getElementById('transaction-amount').value;
+            
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_BASE + '/accounts/' + accountNumber + '/deposit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ amount: parseFloat(amount) })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Deposit successful! New balance: ₱' + result.new_balance.toFixed(2));
+                    getAccountInfo(); // Refresh account info
+                    document.getElementById('transaction-amount').value = '';
+                } else {
+                    alert('❌ Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('❌ Connection error');
+            }
+        }
+        
+        // Withdraw money
+        async function withdraw() {
+            const accountNumber = document.getElementById('access_account').value;
+            const amount = document.getElementById('transaction-amount').value;
+            
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_BASE + '/accounts/' + accountNumber + '/withdraw', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ amount: parseFloat(amount) })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Withdrawal successful! New balance: ₱' + result.new_balance.toFixed(2));
+                    getAccountInfo(); // Refresh account info
+                    document.getElementById('transaction-amount').value = '';
+                } else {
+                    alert('❌ Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('❌ Connection error');
+            }
+        }
+        
+        // Transfer money
+        async function transfer() {
+            const fromAccount = document.getElementById('access_account').value;
+            const toAccount = document.getElementById('transfer-to').value;
+            const amount = document.getElementById('transaction-amount').value;
+            
+            if (!toAccount || !amount || amount <= 0) {
+                alert('Please enter valid transfer details');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_BASE + '/accounts/' + fromAccount + '/transfer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        to_account: toAccount, 
+                        amount: parseFloat(amount) 
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Transfer successful!');
+                    getAccountInfo(); // Refresh account info
+                    document.getElementById('transaction-amount').value = '';
+                    document.getElementById('transfer-to').value = '';
+                } else {
+                    alert('❌ Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('❌ Connection error');
+            }
+        }
+        
+        // Get transaction history
+        async function getTransactionHistory() {
+            const accountNumber = document.getElementById('history-account').value;
+            
+            if (!accountNumber) {
+                alert('Please enter an account number');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_BASE + '/accounts/' + accountNumber + '/transactions');
+                const result = await response.json();
+                const historyDiv = document.getElementById('transaction-history');
+                
+                if (result.success) {
+                    let html = '<h3>Transaction History</h3>';
+                    
+                    if (result.transactions.length === 0) {
+                        html += '<p>No transactions found.</p>';
+                    } else {
+                        result.transactions.forEach(transaction => {
+                            const date = new Date(transaction.timestamp).toLocaleString();
+                            const typeClass = transaction.transaction_type === 'deposit' ? 'deposit' : 'withdrawal';
+                            const sign = transaction.transaction_type === 'deposit' ? '+' : '-';
+                            
+                            html += `
+                                <div class="transaction">
+                                    <p><strong>${transaction.description}</strong></p>
+                                    <p>Date: ${date}</p>
+                                    <p class="${typeClass}">Amount: ${sign}₱${transaction.amount.toFixed(2)}</p>
+                                    <p>Type: ${transaction.transaction_type}</p>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    historyDiv.innerHTML = html;
+                    historyDiv.classList.remove('hidden');
+                } else {
+                    historyDiv.innerHTML = `
+                        <h3 style="color: #e74c3c;">❌ Error</h3>
+                        <p>${result.error}</p>
+                    `;
+                    historyDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                document.getElementById('transaction-history').innerHTML = `
+                    <h3 style="color: #e74c3c;">❌ Connection Error</h3>
+                    <p>Unable to connect to the server.</p>
+                `;
+                document.getElementById('transaction-history').classList.remove('hidden');
+            }
+        }
+        
+        // Initialize with sample data
+        window.onload = function() {
+            document.getElementById('first_name').value = 'Juan';
+            document.getElementById('last_name').value = 'Dela Cruz';
+            document.getElementById('email').value = 'juan@email.com';
+            document.getElementById('phone').value = '09123456789';
+            document.getElementById('dob').value = '1990-01-01';
+            document.getElementById('initial_deposit').value = '1000';
+            document.getElementById('street').value = '123 Main Street';
+            document.getElementById('city').value = 'Manila';
+            document.getElementById('state').value = 'NCR';
+            document.getElementById('zip_code').value = '1000';
+        };
+    </script>
+</body>
+</html>
