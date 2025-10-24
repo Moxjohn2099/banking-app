@@ -216,17 +216,23 @@ class Bank:
                 return account_number
 
 # ===== AUTO KEEP-ALIVE SYSTEM =====
-def keep_alive_ping():
-    """Auto ping the server every 10 minutes to keep it awake"""
-    try:
-        # Ping our own server
-        requests.get("https://banking-app-6dfe.onrender.com/api/keep-alive", timeout=10)
-        print(f"✅ Keep-alive ping sent at {datetime.datetime.now()}")
-    except Exception as e:
-        print(f"❌ Keep-alive failed: {e}")
+def keep_server_awake():
+    """Auto ping the server every 14 minutes to prevent sleep"""
+    def ping_server():
+        try:
+            # Ping our own server
+            requests.get("https://banking-app-6dfe.onrender.com/api/keep-alive", timeout=10)
+            print(f"🔄 Keep-alive ping sent at {datetime.datetime.now().strftime('%H:%M:%S')}")
+        except Exception as e:
+            print(f"⚠️ Keep-alive ping failed: {str(e)}")
     
-    # Schedule next ping in 10 minutes (600 seconds)
-    threading.Timer(600.0, keep_alive_ping).start()
+    # Ping immediately when server starts
+    ping_server()
+    
+    # Then ping every 14 minutes (840 seconds)
+    while True:
+        time.sleep(840)  # 14 minutes
+        ping_server()
 
 # ===== FLASK APP =====
 app = Flask(__name__)
@@ -250,7 +256,9 @@ def keep_alive():
         "status": "awake",
         "message": "Server is being kept alive!",
         "timestamp": datetime.datetime.now().isoformat(),
-        "next_ping": "10 minutes"
+        "next_ping": "14 minutes",
+        "server": "Render",
+        "uptime": "24/7"
     })
 
 # ADD MOBILE TEST ROUTE
@@ -262,7 +270,7 @@ def mobile_test():
         "server": "Render",
         "timestamp": datetime.datetime.now().isoformat(),
         "url": "https://banking-app-6dfe.onrender.com",
-        "keep_alive": "active"
+        "keep_alive": "ACTIVE - Server will not sleep"
     })
 
 # SERVE FRONTEND
@@ -413,8 +421,9 @@ def health_check():
         "total_accounts": len(bank.accounts),
         "total_customers": len(bank.customers),
         "mobile_support": "enabled",
-        "keep_alive": "active",
-        "server_uptime": "24/7"
+        "keep_alive": "ACTIVE",
+        "server_uptime": "24/7 - No Sleep",
+        "timestamp": datetime.datetime.now().isoformat()
     })
 
 # ENHANCED CORS HEADERS FOR MOBILE
@@ -430,14 +439,16 @@ def after_request(response):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     
-    # START AUTO KEEP-ALIVE SYSTEM
+    # START AUTO KEEP-ALIVE SYSTEM IN BACKGROUND
     print(f"🚀 Starting Auto Keep-Alive System...")
-    keep_alive_ping()  # Start the first ping
+    keep_alive_thread = threading.Thread(target=keep_server_awake, daemon=True)
+    keep_alive_thread.start()
     
     print(f"🚀 Banking App Server Started!")
     print(f"📍 URL: https://banking-app-6dfe.onrender.com")
     print(f"📱 Mobile Test: /api/mobile-test")
     print(f"❤️ Health Check: /api/health")
-    print(f"⏰ Keep-Alive: /api/keep-alive (every 10 minutes)")
+    print(f"⏰ Keep-Alive: ACTIVE (ping every 14 minutes)")
+    print(f"💤 Sleep Prevention: ENABLED")
     
     app.run(host='0.0.0.0', port=port, debug=False)
