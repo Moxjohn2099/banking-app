@@ -1,17 +1,10 @@
-import logging
-logging.basicConfig(level=logging.INFO)
-
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-import json
 import datetime
 import random
 from enum import Enum
 from dataclasses import dataclass
 import os
-import threading
-import requests
-import time
 
 # ===== BANKING SYSTEM CLASSES =====
 class AccountType(Enum):
@@ -24,7 +17,6 @@ class TransactionType(Enum):
     DEPOSIT = "deposit"
     WITHDRAWAL = "withdrawal"
     TRANSFER = "transfer"
-    INTEREST = "interest"
 
 @dataclass
 class Address:
@@ -32,7 +24,7 @@ class Address:
     city: str
     state: str
     zip_code: str
-    country: str = "USA"
+    country: str = "Philippines"
     
     def to_dict(self):
         return {
@@ -172,11 +164,11 @@ class BankAccount:
             'interest_rate': self.interest_rate,
             'is_active': self.is_active,
             'date_opened': self.date_opened.isoformat(),
-            'transactions': [t.to_dict() for t in self.transactions]
+            'transactions': [t.to_dict() for t in self.transactions[-10:]]  # Last 10 transactions
         }
 
 class Bank:
-    def __init__(self, name, routing_number):
+    def __init__(self, name="Digital Bank", routing_number="123456789"):
         self.name = name
         self.routing_number = routing_number
         self.accounts = {}
@@ -215,73 +207,44 @@ class Bank:
             if account_number not in self.accounts:
                 return account_number
 
-# ===== AUTO KEEP-ALIVE SYSTEM =====
-def keep_server_awake():
-    """Auto ping the server every 14 minutes to prevent sleep"""
-    def ping_server():
-        try:
-            # Ping our own server
-            requests.get("https://banking-app-6dfe.onrender.com/api/keep-alive", timeout=10)
-            print(f"🔄 Keep-alive ping sent at {datetime.datetime.now().strftime('%H:%M:%S')}")
-        except Exception as e:
-            print(f"⚠️ Keep-alive ping failed: {str(e)}")
-    
-    # Ping immediately when server starts
-    ping_server()
-    
-    # Then ping every 14 minutes (840 seconds)
-    while True:
-        time.sleep(840)  # 14 minutes
-        ping_server()
-
 # ===== FLASK APP =====
 app = Flask(__name__)
 
-# SUPER CORS FIX FOR MOBILE & COMPUTER
-CORS(app, resources={
-    r"/*": {
-        "origins": "*",
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["*"]
-    }
-})
+# CORS FOR MOBILE & COMPUTER
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Initialize bank
-bank = Bank("Digital Bank", "123456789")
+bank = Bank()
 
-# KEEP-ALIVE ROUTE
-@app.route('/api/keep-alive')
-def keep_alive():
+# HEALTH CHECK ROUTE
+@app.route('/api/health')
+def health_check():
     return jsonify({
-        "status": "awake",
-        "message": "Server is being kept alive!",
-        "timestamp": datetime.datetime.now().isoformat(),
-        "next_ping": "14 minutes",
-        "server": "Render",
-        "uptime": "24/7"
-    })
-
-# ADD MOBILE TEST ROUTE
-@app.route('/api/mobile-test')
-def mobile_test():
-    return jsonify({
-        "status": "SUCCESS",
-        "message": "✅ Backend is working on MOBILE!",
-        "server": "Render",
-        "timestamp": datetime.datetime.now().isoformat(),
-        "url": "https://banking-app-6dfe.onrender.com",
-        "keep_alive": "ACTIVE - Server will not sleep"
+        "status": "healthy",
+        "bank_name": bank.name,
+        "total_accounts": len(bank.accounts),
+        "total_customers": len(bank.customers),
+        "timestamp": datetime.datetime.now().isoformat()
     })
 
 # SERVE FRONTEND
 @app.route('/')
 def serve_frontend():
     try:
-        return send_file('simple_frontend.html')
+        with open('simple_frontend.html', 'r', encoding='utf-8') as f:
+            return f.read()
     except Exception as e:
-        return jsonify({"error": f"Frontend file not found: {str(e)}"}), 404
+        return f"""
+        <html>
+            <body>
+                <h1>🏦 Banking App Backend</h1>
+                <p>Backend is running! Frontend file not found: {str(e)}</p>
+                <p><a href="/api/health">Check Health</a></p>
+            </body>
+        </html>
+        """
 
-# KEEP ALL YOUR EXISTING ROUTES AS THEY ARE
+# CREATE ACCOUNT
 @app.route('/api/accounts', methods=['POST'])
 def create_account():
     try:
@@ -315,6 +278,7 @@ def create_account():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
+# GET ACCOUNT INFO
 @app.route('/api/accounts/<account_number>', methods=['GET'])
 def get_account(account_number):
     try:
@@ -330,6 +294,7 @@ def get_account(account_number):
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
+# DEPOSIT
 @app.route('/api/accounts/<account_number>/deposit', methods=['POST'])
 def deposit(account_number):
     try:
@@ -350,6 +315,7 @@ def deposit(account_number):
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
+# WITHDRAW
 @app.route('/api/accounts/<account_number>/withdraw', methods=['POST'])
 def withdraw(account_number):
     try:
@@ -370,6 +336,7 @@ def withdraw(account_number):
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
+# TRANSFER
 @app.route('/api/accounts/<from_account>/transfer', methods=['POST'])
 def transfer(from_account):
     try:
@@ -395,6 +362,7 @@ def transfer(from_account):
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
+# GET TRANSACTIONS
 @app.route('/api/accounts/<account_number>/transactions', methods=['GET'])
 def get_transactions(account_number):
     try:
@@ -413,42 +381,21 @@ def get_transactions(account_number):
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    return jsonify({
-        "status": "healthy",
-        "bank_name": bank.name,
-        "total_accounts": len(bank.accounts),
-        "total_customers": len(bank.customers),
-        "mobile_support": "enabled",
-        "keep_alive": "ACTIVE",
-        "server_uptime": "24/7 - No Sleep",
-        "timestamp": datetime.datetime.now().isoformat()
-    })
-
-# ENHANCED CORS HEADERS FOR MOBILE
+# ENHANCED CORS HEADERS
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', '*')
     response.headers.add('Access-Control-Allow-Methods', '*')
-    response.headers.add('Access-Control-Allow-Credentials', 'true')
     return response
 
 # SERVER STARTUP
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     
-    # START AUTO KEEP-ALIVE SYSTEM IN BACKGROUND
-    print(f"🚀 Starting Auto Keep-Alive System...")
-    keep_alive_thread = threading.Thread(target=keep_server_awake, daemon=True)
-    keep_alive_thread.start()
-    
     print(f"🚀 Banking App Server Started!")
-    print(f"📍 URL: https://banking-app-6dfe.onrender.com")
-    print(f"📱 Mobile Test: /api/mobile-test")
+    print(f"📍 Local URL: http://localhost:{port}")
+    print(f"🌐 Network URL: http://YOUR-IP:{port}")
     print(f"❤️ Health Check: /api/health")
-    print(f"⏰ Keep-Alive: ACTIVE (ping every 14 minutes)")
-    print(f"💤 Sleep Prevention: ENABLED")
     
     app.run(host='0.0.0.0', port=port, debug=False)
